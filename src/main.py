@@ -31,7 +31,7 @@ def damerau_levenshtein_distance(s1, s2):
     return d[lenstr1][lenstr2] / max(lenstr1, lenstr2)
 
 
-class AntiPlagiarism:
+class BinaryComparator:
     danger_score = 0.33  # Danger percent of similarity
 
     def __init__(self, metric):
@@ -58,12 +58,12 @@ class AntiPlagiarism:
 
 def worker(line):
     """Compare two filenames from one line"""
-    comparator = AntiPlagiarism(damerau_levenshtein_distance)
+    comparator = BinaryComparator(damerau_levenshtein_distance)
     return comparator.Compare(*line)
 
 
 def writing_results(out_filename, results, first_path, second_path):
-    score = AntiPlagiarism.danger_score
+    score = BinaryComparator.danger_score
     with open(out_filename, "w") as w:
         w.write("Идентичные файлы:\n")
         for result in results:
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     parser.add_argument("results")
     args = parser.parse_args()
 
-    AntiPlagiarism.danger_score = float(args.score)
+    BinaryComparator.danger_score = float(args.score)
     filename_pairs = []
 
     first_path = Path(args.first_folder)
