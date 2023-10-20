@@ -62,28 +62,9 @@ def worker(line):
     return comparator.Compare(*line)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Compares python files and produces similarity")
-    parser.add_argument("first_folder")
-    parser.add_argument("second_folder")
-    parser.add_argument("score")
-    parser.add_argument("results")
-    args = parser.parse_args()
-    score = float(args.score)
-    filename_pairs = []
-    AntiPlagiarism.danger_score = score
-
-    first_path = Path(args.first_folder)
-    second_path = Path(args.second_folder)
-    for first_dir_file in first_path.rglob("*"):
-        for second_dir_file in second_path.rglob("*"):
-            filename_pairs.append((first_dir_file, second_dir_file))
-
-    with mp.Pool(mp.cpu_count()) as p:
-        results = p.map(worker, filename_pairs)
-
-    with open(args.results, "w") as w:
+def writing_results(out_filename, results, first_path, second_path):
+    score = AntiPlagiarism.danger_score
+    with open(out_filename, "w") as w:
         w.write("Идентичные файлы:\n")
         for result in results:
             if result[2] == 1:
@@ -115,3 +96,27 @@ if __name__ == "__main__":
                     break
             if not has_similar:
                 w.write("Second directory: {}\n".format(second_dir_file))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Compares python files and produces similarity")
+    parser.add_argument("first_folder")
+    parser.add_argument("second_folder")
+    parser.add_argument("score")
+    parser.add_argument("results")
+    args = parser.parse_args()
+
+    AntiPlagiarism.danger_score = float(args.score)
+    filename_pairs = []
+
+    first_path = Path(args.first_folder)
+    second_path = Path(args.second_folder)
+    for first_dir_file in first_path.rglob("*"):
+        for second_dir_file in second_path.rglob("*"):
+            filename_pairs.append((first_dir_file, second_dir_file))
+
+    with mp.Pool(mp.cpu_count()) as p:
+        results = p.map(worker, filename_pairs)
+
+    writing_results(args.results, results, first_path, second_path)
